@@ -5,7 +5,7 @@
 
 	var pageSwitch = (function () {
 		function pageSwitch (elem, options) {
-			this.settings = $.extend(true, $.fn.pageSwitch.default, options||{});
+			this.settings = $.extend(true, $.fn.pageSwitch.defaults, options||{});
 			this.elem = elem;
 			this.init();
 		}
@@ -43,6 +43,28 @@
 				return this.direction ? this.elem.height() : this.elem.width();
 			},
 
+			// 向上滑动
+			prev : function () {
+				var me = this;
+				if (me.index > 0) {
+					me.index--;
+				} else if (me.settings.loop) {
+					me.index = me.pagesCount - 1;
+				}
+				me._scrollPage();
+			},
+
+			// 向下滑动
+			next : function () {
+				var me = this;
+				if (me.index < me.pagesCount) {
+					me.index++;
+				} else if (me.settings.loop){
+					me.index = 0;
+				}
+				me._scrollPage();
+			},
+
 			// 主要针对横屏情况进行页面布局
 			_initLayout : function () {
 				var me = this,
@@ -73,9 +95,22 @@
 				}
 			},
 
-			// 初始化插件事务
+			// 初始化插件事件
 			_initEvent : function () {
+				var me = this;
+				me.elem.on("click", me.selectors.pages + " li",function () {
+					me.index = $(this).index();
+					me._scrollPage();
+				});
 
+				me.elem.on("mousewheel DOMMouseScroll", function (e) {
+					var delta = e.originalEvent.wheelDelta || -e.originalEvent.detail;
+					if (delta > 0 && (me.index &&me.settings.loop || me.settings.loop)) {
+						me.prev();
+					} else if (delta < 0 && (me.index < (me.pagesCount - 1) && !me.settings.loop || me.settings.loop)) {
+						me.next();
+					}
+				});
 			}
 		}
 		return pageSwitch;
@@ -102,7 +137,7 @@
 	}
 
 	// 定义配置信息
-	$.fn.pageSwitch.default = {
+	$.fn.pageSwitch.defaults = {
 		selectors: {
 			sections: ".sections",
 			section: ".section",
